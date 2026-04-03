@@ -1,0 +1,130 @@
+{
+  "header": {
+    "isa_reference": "ISA/2024/CHN/0847",
+    "principal_reference": "CLM-HK-20240315-098",
+    "report_date": "15 April 2024"
+  },
+
+  "shipment_details": {
+    "number_of_packages": "420 cartons",
+    "goods_description": "Consumer Electronics (LED Monitors)",
+    "shipper_name": "Shenzhen Bright Electronics Manufacturing Co., Ltd",
+    "shipper_country": "China",
+    "consignee_name": "Omega Tech Distribution (Pty) Ltd",
+    "consignee_country": "South Africa",
+    "incoterms": "FOB Shenzhen"
+  },
+
+  "container_details": {
+    "number_of_containers": "1",
+    "container_types": "40' HC",
+    "container_numbers": "TCLU4567890",
+    "container_gate_out_date": "08 February 2024",
+    "container_return_date": "12 February 2024"
+  },
+
+  "port_location_details": {
+    "origin_port_name": "Shenzhen",
+    "origin_port_country": "China",
+    "discharge_port_name": "Durban",
+    "discharge_port_country": "South Africa"
+  },
+
+  "carrier_shipping_details": {
+    "carrier_name": "Mediterranean Shipping Company (MSC)",
+    "shipment_terms": "CY/CY",
+    "bill_of_lading_number": "MEDUAB240208974",
+    "bill_of_lading_issue_place": "Shenzhen",
+    "bill_of_lading_issue_date": "13 February 2024",
+    "vessel_name": "MSC MAYA",
+    "voyage_number": "FM424R",
+    "vessel_loading_date": "14 February 2024"
+  },
+
+  "transhipment_details": {
+    "has_transhipment": true,
+    "transhipment_port_name": "Singapore",
+    "transhipment_port_country": "Singapore",
+    "transhipment_arrival_date": "21 February 2024",
+    "transhipment_discharge_date": "21 February 2024",
+    "oncarrying_vessel_name": "MSC FEDERICA",
+    "oncarrying_voyage_number": "FM518A",
+    "transhipment_reload_date": "23 February 2024"
+  },
+
+  "final_discharge_delivery": {
+    "final_discharge_port_name": "Durban",
+    "final_discharge_port_country": "South Africa",
+    "final_port_arrival_date": "12 March 2024",
+    "container_discharge_date": "13 March 2024",
+    "container_collection_date": "18 March 2024",
+    "consignee_delivery_type": "Consignee's warehouse",
+    "delivery_premises_location": "Unit 12, Riverhorse Valley Industrial Park",
+    "delivery_city": "Durban",
+    "delivery_arrival_date": "the same day"
+  },
+
+  "damage_discovery": {
+    "damaged_container_number": "TCLU4567890",
+    "damage_discovery_narrative": "water ingress was evident on the interior roof panels and left-side wall of the container. Additionally, approximately 85 cartons located in the forward left corner of the container exhibited visible water staining on the outer corrugated packaging. The Consignee immediately ceased unloading operations and photographed the affected area before notifying their insurance broker and the shipping line"
+  },
+
+  "survey_arrangements": {
+    "consignee_contact_person": "Mr. Rajesh Naidoo, Warehouse Manager",
+    "survey_arrangements_discussion": "the affected cargo remained in situ within the container at their warehouse facility. The Consignee confirmed that the container had not been fully devanned and requested our immediate attendance to jointly inspect the cargo prior to any further handling. They also advised that they had preserved the container in its delivered condition with doors closed and resealed pending our arrival",
+    "survey_attendance_date": "20 March 2024"
+  },
+
+  "goods_packaging": {
+    "gross_weight_kgs": "18,750",
+    "net_weight_kgs": "16,920",
+    "packaging_method_description": "Each monitor unit was individually wrapped in polyethylene film and secured with foam corner protectors. Two units were packed per master carton (double-wall corrugated cardboard, specification: 200gsm BCT rating). The cartons were stacked in a uniform pattern, 7 cartons high × 10 cartons wide × 6 rows deep, totaling 420 cartons. No dunnage or moisture-absorbing materials were observed within the container. The cargo was not secured with lashing straps or bracing, relying solely on the tight-packed stowage method."
+  },
+
+  "container_condition": {
+    "container_available": true,
+    "container_condition_description": "Upon external examination, the container appeared structurally sound with no visible impact damage, deformation, or holes in the sidewalls or doors. However, upon opening the doors, we noted significant water staining along the interior ceiling panel extending approximately 2.5 meters from the front left corner. The left-side wall also exhibited water streaking patterns. Inspection of the roof exterior revealed a 15cm linear split in the roof panel's weather seal, located approximately 1.8 meters from the front left corner. This damage was consistent with mechanical impact, possibly from container handling equipment. The door gaskets were intact and the locking mechanism functioned correctly. The container floor was wet in the forward section, with pooled water visible beneath the bottom tier of cartons.",
+    "container_condition_from_consignee": ""
+  },
+
+  "goods_condition": {
+    "goods_condition_description": "We commenced by examining the exterior packaging of the affected cartons. Of the 420 cartons originally loaded, 85 cartons (approximately 20.2% of the shipment) exhibited water damage to varying degrees:\n\n- 32 cartons (Tier 1 - bottom row, forward left section): Severe water saturation with complete cardboard deterioration on bottom panels, visible water staining extending to upper panels, and evidence of water pooling. Carton structural integrity was compromised.\n\n- 38 cartons (Tier 2 and Tier 3 - second and third rows from bottom): Moderate water staining on upper surfaces and side panels, with partial saturation. Cardboard remained structurally intact but exhibited discoloration and softening.\n\n- 15 cartons (Tier 4 - fourth row from bottom): Light water spotting on top panels only, cardboard integrity maintained.\n\nWe proceeded to open representative samples from each category:\n\nSeverely Damaged (32 cartons): Upon opening, we found that the internal polyethylene wrapping had retained some moisture. The monitor units exhibited water ingress into the electronic components, with visible moisture condensation inside the LCD screens, corrosion on HDMI/VGA ports, and water damage to the cardboard insert packaging. Power testing was not attempted due to safety concerns. These units are considered a total loss.\n\nModerately Damaged (38 cartons): The polyethylene wrapping showed exterior moisture but had largely protected the monitor units. However, 23 of the 38 sampled units showed moisture penetration around the base stands and connector panels. Minor corrosion was visible on metal components. These units require professional cleaning, drying, and electrical testing before resale consideration.\n\nLightly Damaged (15 cartons): The monitor units themselves appeared unaffected; however, the outer carton damage renders them unsuitable for retail sale in original packaging.\n\nThe remaining 335 cartons were inspected on a sampling basis (40 cartons opened) and found to be in good condition with no evidence of water exposure."
+  },
+
+  "testing": {
+    "testing_performed": false,
+    "temperature_testing_results": "",
+    "chemical_testing_results": "",
+    "moisture_testing_results": ""
+  },
+
+  "discussions": {
+    "post_survey_discussions": "the 32 severely damaged units would be considered unrecoverable and destroyed in accordance with local regulations. The 38 moderately damaged units would be sent to an authorized electronics repair center for assessment, cleaning, and potential refurbishment. The 15 lightly damaged units could potentially be sold at a discount to staff or via secondary channels subject to repackaging. The 335 undamaged units would be released for normal retail distribution. The Consignee requested our recommendation regarding salvage procedures and documentation requirements for their insurance claim"
+  },
+
+  "developments": {
+    "development_date": "28 March 2024",
+    "developments_narrative": "the Consignee had obtained quotations from TechRevive Solutions (Pty) Ltd for inspection and refurbishment of the 38 moderately damaged units. The quote totaled ZAR 47,500 (approximately USD 2,580) for complete assessment, cleaning, component replacement where necessary, and re-testing. The severely damaged units had been photographed, inventoried, and prepared for disposal. The lightly damaged units were sold to staff members at 40% discount, generating ZAR 18,750 in salvage recovery. The Consignee also confirmed that they had initiated a claim against the carrier for the roof panel damage discovered during our survey"
+  },
+
+  "loss_quantification": {
+    "commercial_invoice_number": "SBEM/2024/02/1847",
+    "commercial_invoice_date": "10 February 2024",
+    "claim_value_currency": "USD",
+    "claim_value_amount": "52,500.00",
+    "loss_details_narrative": "The invoice value breaks down as follows: 420 cartons × USD 125.00 per carton = USD 52,500.00 FOB Shenzhen. As this was an FOB shipment, the Consignee separately arranged and paid for ocean freight (USD 2,840.00), insurance (USD 630.00), and destination port charges (USD 1,250.00). Total CIF value amounts to USD 57,220.00.\n\nClaim Breakdown:\n- Total Loss (32 cartons): 32 × USD 125.00 = USD 4,000.00\n- Refurbishment Required (38 cartons): 38 × USD 125.00 = USD 4,750.00\n- Carton Damage Only (15 cartons): 15 × USD 125.00 × 15% depreciation = USD 281.25\n- Undamaged (335 cartons): No claim\n\nProportionate Freight & Charges:\nDamaged cargo represents 85/420 = 20.24% of shipment\n- Freight: USD 2,840 × 20.24% = USD 575.00\n- Destination charges: USD 1,250 × 20.24% = USD 253.00\n\nSubtotal Product Loss: USD 9,031.25\nSubtotal Freight/Charges: USD 828.00\n\nLess: Salvage Recovery from staff sale: (USD 990.00)",
+    "additional_costs_narrative": "Refurbishment Costs: USD 2,580.00 - Quote from TechRevive Solutions for cleaning and repair of 38 moderately damaged units. These costs were necessarily incurred to mitigate the loss and render the goods merchantable.\n\nSurvey Fees: USD 1,250.00 - Professional survey attendance and report preparation to establish the nature, extent and cause of loss as required by underwriters.\n\nContainer Detention Charges: USD 420.00 - The container was detained for 4 additional days beyond free time due to the survey requirements (4 days × USD 105.00 per day). These charges were invoiced by the shipping line.\n\nPhotography and Documentation: USD 150.00 - Professional photography of damaged cargo and preparation of loss documentation for insurance purposes.\n\nTotal Additional Costs: USD 4,400.00\n\nTOTAL CLAIM AMOUNT: USD 13,269.25"
+  },
+
+  "cause_of_loss": {
+    "loss_cause_summary": "water ingress through compromised container roof panel",
+    "loss_cause_explanation": "The physical evidence clearly demonstrates that the loss occurred due to a 15cm split in the container roof panel's weather seal, located in the forward left corner section. This structural failure allowed rainwater to enter the container during the ocean voyage. \n\nThe damage pattern - concentrated in the forward left corner with decreasing severity in upper tiers - is entirely consistent with water ingress from above during vessel motion and weather exposure. The timeline indicates the container was at sea for approximately 26 days (14 Feb - 12 Mar), during which it would have been exposed to various weather conditions, particularly during the Indian Ocean crossing.\n\nThe roof panel damage appears to be the result of improper handling during container yard operations, either prior to gate-out or during loading operations at the port of origin. Container terminal equipment (reach stackers, top loaders) can cause such damage if containers are handled roughly or if spreader alignment is incorrect.\n\nLiability Assessment: The carrier, Mediterranean Shipping Company (MSC), is liable for this loss. The container was received by them in apparent good condition (no exception noted on the Bill of Lading regarding container condition). The structural damage to the container roof occurred while the cargo was in the carrier's custody, and they are responsible for providing seaworthy containers under the Hague-Visby Rules. The consignee noted the container damage immediately upon delivery and properly documented the loss.\n\nTimeframe: The damage to the container roof likely occurred during terminal handling at Shenzhen port or during loading operations on 14 February 2024. The water ingress would have been progressive throughout the voyage, particularly during the transhipment operations at Singapore and the final leg to Durban, where the vessel would have encountered typical monsoon and Indian Ocean weather patterns."
+  },
+
+  "grammar_switches": {
+    "container_singular_plural": "container",
+    "was_were": "was",
+    "it_they": "it",
+    "seal_singular_plural": "s"
+  }
+}

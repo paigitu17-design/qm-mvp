@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Admin - Container Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/quest-marine-logo.png') }}" alt="Quest Marine LLC" class="company-logo">
+                <h1>Contact Administrator</h1>
+                <p>Need help accessing your account?</p>
+            </div>
+
+            <div class="contact-info">
+                <div class="info-item">
+                    <strong>Company:</strong>
+                    <p>Quest Marine LLC<br>
+                    Marine Surveyors and Consultants<br>
+                    ISO 9001, 14001, 45001 Certified</p>
+                </div>
+
+                <div class="info-item">
+                    <strong>Email:</strong>
+                    <p>admin@questmarine.com</p>
+                </div>
+
+                <div class="info-item">
+                    <strong>Phone:</strong>
+                    <p>+1 (555) 123-4567</p>
+                </div>
+
+                <div class="info-item">
+                    <strong>Office Hours:</strong>
+                    <p>Monday - Friday: 9:00 AM - 5:00 PM</p>
+                </div>
+
+                <div class="info-item">
+                    <strong>Support:</strong>
+                    <p>For technical support, please email:<br>
+                    support@questmarine.com</p>
+                </div>
+            </div>
+
+            <div class="back-to-login">
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">
+                    ← Back to Login
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

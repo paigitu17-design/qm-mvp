@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+
+# Environment / secrets
+.env
+
+# Uploaded files and generated reports
+uploads/
+reports/
+data/
+
+# OS
+.DS_Store
