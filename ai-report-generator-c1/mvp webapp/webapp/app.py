@@ -225,10 +225,24 @@ def generate_full_report(case_data):
     survey_table = doc.add_table(rows=4, cols=2)
     survey_table.style = 'Table Grid'
 
+    # Surveyor in Charge = attending_surveyor from iAuditor
+    surveyor_name = case_data.get('attending_surveyor', '') or case_data.get('surveyor_in_charge', '#')
+    # Place & Date = survey_location + survey_date from iAuditor
+    survey_loc = case_data.get('survey_location', '')
+    survey_dt = case_data.get('survey_date', '')
+    if survey_loc and survey_loc != 'N/A' and survey_dt and survey_dt != 'N/A':
+        survey_place_date = f"{survey_loc}, {survey_dt}"
+    elif survey_loc and survey_loc != 'N/A':
+        survey_place_date = survey_loc
+    elif survey_dt and survey_dt != 'N/A':
+        survey_place_date = survey_dt
+    else:
+        survey_place_date = '#'
+
     survey_fields = [
-        ('Surveyor in Charge:', case_data.get('surveyor_in_charge', '#')),
-        ('Attending Surveyor:', case_data.get('attending_surveyor', '#')),
-        ('Place & Date of Survey(s):', case_data.get('survey_place_date', '#')),
+        ('Surveyor in Charge:', surveyor_name),
+        ('Attending Surveyor:', surveyor_name),
+        ('Place & Date of Survey(s):', survey_place_date),
         ('Other Parties in Attendance:', case_data.get('other_parties', '#')),
     ]
 
@@ -251,16 +265,33 @@ def generate_full_report(case_data):
     transit_table = doc.add_table(rows=7, cols=2)
     transit_table.style = 'Table Grid'
 
-    container_info = case_data.get('container_number', '#')
+    # Container number + type (type from packing list extraction)
+    cntr_num = case_data.get('container_number', '#')
+    cntr_type = case_data.get('container_type', '')
+    if cntr_type and cntr_type != 'N/A':
+        container_info = f"{cntr_num} ({cntr_type})"
+    else:
+        container_info = cntr_num
+
     bl_info = f"{case_data.get('carrier_name', '#CARRIER')} Bill of Lading No. {case_data.get('bl_number', '#B/L NO.')} issued at {case_data.get('bl_issue_place', '#PLACE')} on {case_data.get('bl_issue_date', '#DATE')}"
     shipment_from_to = f"{case_data.get('origin_port', '#LOAD PORT')}, {case_data.get('origin_country', '#COUNTRY')} to {case_data.get('discharge_port', '#DISPORT')}, {case_data.get('destination_country', '#COUNTRY')}"
+
+    # Delivery place/date from iAuditor "Date of delivery to the Consignee"
+    delivery_date = case_data.get('delivery_date', '#DATE')
+    delivery_loc = case_data.get('delivery_location', '') or case_data.get('survey_location', '')
+    if delivery_loc and delivery_loc != 'N/A' and delivery_date and delivery_date != 'N/A':
+        delivery_info = f"{delivery_loc} on {delivery_date}"
+    elif delivery_date and delivery_date != 'N/A':
+        delivery_info = delivery_date
+    else:
+        delivery_info = '#PLACE on #DATE'
 
     transit_fields = [
         ('Container Number(s) and type:', container_info),
         ('Bill of Lading No. and Date:', bl_info),
         ('Shipment - From / To:', shipment_from_to),
         ('Vessel Arrival Date:', case_data.get('arrival_date', '#')),
-        ('Place and Date of Final Delivery:', f"{case_data.get('delivery_place', '#PLACE')} on {case_data.get('delivery_date', '#DATE')}"),
+        ('Place and Date of Final Delivery:', delivery_info),
         ('Nature of Receipt Given on Delivery:', case_data.get('delivery_receipt', 'Delivery Receipt / EIR claused "#REMARKS"')),
         ('', ''),
     ]
