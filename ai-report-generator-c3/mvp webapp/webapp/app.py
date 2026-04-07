@@ -15,6 +15,12 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from document_extractor import process_uploaded_documents, analyze_damage_image, extract_iauditor_images, narrate_iauditor_sections, extract_iauditor_file_summary
 from email_service import GraphEmailService, EmailServiceError
+from email_pipeline import (
+    scheduler as email_scheduler,
+    load_settings as load_email_settings,
+    save_settings as save_email_settings,
+    classify_attachment,
+)
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
@@ -1060,6 +1066,146 @@ def logout():
     session.pop('username', None)
     flash('You have been logged out', 'info')
     return redirect(url_for('login'))
+
+
+# ---------------------------------------------------------------------------
+# Email automation pipeline (background scheduler)
+# ---------------------------------------------------------------------------
+
+def _process_email_message(msg):
+    """Convert one fetched email into a generated report file path.
+
+    Reused by the background scheduler — runs the same extraction +
+    report generation pipeline as a manual upload.
+    """
+    case_id = f"EMAIL-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+    case_folder = os.path.join(UPLOAD_FOLDER, case_id)
+    os.makedirs(case_folder, exist_ok=True)
+
+    documents = {}
+    for att in msg.attachments:
+        ftype = classify_attachment(att.file_name)
+        # Avoid clobbering if two attachments map to the same slot
+        if ftype in documents:
+            ftype = 'iauditor_report'
+        safe = secure_filename(att.file_name)
+        path = os.path.join(case_folder, f"{ftype}_{safe}")
+        with open(path, 'wb') as f:
+            f.write(att.content_bytes)
+        documents[ftype] = safe
+
+    extracted = {}
+    try:
+        extracted = process_uploaded_documents(case_folder, documents) or {}
+    except Exception as e:
+        print(f"[email_pipeline] extraction failed for {case_id}: {e}")
+
+    case_data = {
+        'id': case_id,
+        'case_reference': extracted.get('case_reference') or case_id,
+        'documents': documents,
+        'images': [],
+        'created_by': 'email-automation',
+        'created_at': datetime.now().isoformat(),
+        'status': 'pending',
+        'source_email': msg.sender,
+        'source_subject': msg.subject,
+    }
+    for k, v in extracted.items():
+        if isinstance(v, (str, int, float, bool, list, dict)):
+            case_data.setdefault(k, v)
+
+    # iAuditor image extraction (same as manual upload path)
+    if 'iauditor_report' in documents:
+        ipath = os.path.join(case_folder, f"iauditor_report_{documents['iauditor_report']}")
+        if os.path.exists(ipath):
+            try:
+                imgs = extract_iauditor_images(
+                    ipath, os.path.join(case_folder, 'iauditor_images')
+                )
+                try:
+                    imgs = narrate_iauditor_sections(imgs)
+                except Exception as e:
+                    print(f"[email_pipeline] narration failed: {e}")
+                case_data['iauditor_images'] = imgs
+                try:
+                    case_data['iauditor_enclosures'] = extract_iauditor_file_summary(ipath)
+                except Exception as e:
+                    print(f"[email_pipeline] enclosure extraction failed: {e}")
+                    case_data['iauditor_enclosures'] = []
+            except Exception as e:
+                print(f"[email_pipeline] iAuditor image extraction failed: {e}")
+
+    case_data['report_date'] = datetime.now().strftime('%d %B %Y')
+    filename = generate_full_report(case_data)
+    case_data['status'] = 'completed'
+    case_data['report_file'] = filename
+    case_data['completed_at'] = datetime.now().isoformat()
+
+    cases = load_case_data()
+    cases.append(case_data)
+    save_case_data(cases)
+
+    return os.path.join(REPORTS_FOLDER, filename)
+
+
+email_scheduler.configure(_process_email_message)
+
+
+@app.route('/email/automation', methods=['GET'])
+def email_automation_page():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    settings = load_email_settings()
+    display = dict(settings)
+    for k in ('client_secret', 'app_password'):
+        if display.get(k):
+            display[k] = '••••••••'
+    return render_template(
+        'email_automation.html',
+        settings=display,
+        status=email_scheduler.status(),
+        username=session['username'],
+    )
+
+
+@app.route('/email/settings', methods=['POST'])
+def email_save_settings_route():
+    if 'username' not in session:
+        return jsonify({'error': 'unauthorized'}), 401
+    body = request.get_json(silent=True) or request.form.to_dict()
+    allowed = (
+        'provider', 'mailbox', 'tenant_id', 'client_id',
+        'client_secret', 'app_password', 'poll_interval_seconds',
+    )
+    updates = {k: body.get(k) for k in allowed if k in body}
+    saved = save_email_settings(updates)
+    masked = dict(saved)
+    for k in ('client_secret', 'app_password'):
+        if masked.get(k):
+            masked[k] = '••••••••'
+    return jsonify({'success': True, 'settings': masked})
+
+
+@app.route('/email/scheduler/start', methods=['POST'])
+def email_scheduler_start():
+    if 'username' not in session:
+        return jsonify({'error': 'unauthorized'}), 401
+    return jsonify(email_scheduler.start())
+
+
+@app.route('/email/scheduler/stop', methods=['POST'])
+def email_scheduler_stop():
+    if 'username' not in session:
+        return jsonify({'error': 'unauthorized'}), 401
+    return jsonify(email_scheduler.stop())
+
+
+@app.route('/email/scheduler/status')
+def email_scheduler_status():
+    if 'username' not in session:
+        return jsonify({'error': 'unauthorized'}), 401
+    return jsonify(email_scheduler.status())
 
 
 @app.route('/email/fetch-latest-document', methods=['POST'])

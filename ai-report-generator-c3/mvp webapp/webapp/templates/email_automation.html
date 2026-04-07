@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Automation - Container Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .auto-card { background:#fff; border-radius:8px; padding:24px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,.08);}
+        .auto-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .auto-grid .full { grid-column:1 / -1; }
+        .field label { display:block; font-weight:600; margin-bottom:4px; font-size:13px; }
+        .field input, .field select { width:100%; padding:8px 10px; border:1px solid #ccd; border-radius:4px; font-size:14px;}
+        .status-pill { display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;}
+        .pill-running { background:#d4edda; color:#155724; }
+        .pill-stopped, .pill-idle { background:#e2e3e5; color:#41464b; }
+        .pill-error { background:#f8d7da; color:#721c24; }
+        .pill-stopping { background:#fff3cd; color:#856404; }
+        .row-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .meta { font-size:12px; color:#666; margin-top:8px; }
+        .provider-fields[data-provider="gmail"] .outlook-only { display:none; }
+        .provider-fields[data-provider="outlook"] .gmail-only { display:none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="{{ url_for('static', filename='images/quest-marine-logo.png') }}" alt="Quest Marine LLC" class="nav-logo">
+                <h2>Container Inspection System</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('email_automation_page') }}" class="nav-link active">Email Automation</a>
+                <span class="nav-user">👤 {{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1>📧 Email Automation</h1>
+            <p>Automatically poll a mailbox, process inspection emails, generate reports, and reply to the sender.</p>
+        </div>
+
+        <div class="auto-card">
+            <h2>Scheduler</h2>
+            <div class="row-actions">
+                <span>Status:</span>
+                <span id="statusPill" class="status-pill pill-{{ status.last_status }}">{{ status.last_status }}</span>
+                <button type="button" class="btn btn-primary" id="startBtn" onclick="startScheduler()">▶ Start</button>
+                <button type="button" class="btn btn-secondary" id="stopBtn" onclick="stopScheduler()">⏹ Stop</button>
+                <button type="button" class="btn" onclick="refreshStatus()">↻ Refresh</button>
+            </div>
+            <div class="meta">
+                <div>Last run: <span id="lastRun">{{ status.last_run_at or '—' }}</span></div>
+                <div>Processed: <span id="processedCount">{{ status.processed_count }}</span></div>
+                <div>Last error: <span id="lastError" style="color:#a00;">{{ status.last_error or '—' }}</span></div>
+            </div>
+        </div>
+
+        <div class="auto-card">
+            <h2>Provider Credentials</h2>
+            <p style="font-size:13px; color:#666;">
+                Secrets are stored on disk in <code>data/email_settings.json</code>. Leave a secret field blank to keep the existing value.
+            </p>
+            <form id="settingsForm" onsubmit="saveSettings(event)">
+                <div class="auto-grid provider-fields" id="providerFields" data-provider="{{ settings.provider }}">
+                    <div class="field full">
+                        <label>Provider</label>
+                        <select name="provider" id="providerSelect" onchange="onProviderChange()">
+                            <option value="outlook" {% if settings.provider == 'outlook' %}selected{% endif %}>Microsoft 365 / Outlook (Graph)</option>
+                            <option value="gmail" {% if settings.provider == 'gmail' %}selected{% endif %}>Gmail (IMAP / SMTP)</option>
+                        </select>
+                    </div>
+                    <div class="field full">
+                        <label>Mailbox address</label>
+                        <input type="email" name="mailbox" value="{{ settings.mailbox }}" placeholder="reports@yourcompany.com" required>
+                    </div>
+
+                    <div class="field outlook-only">
+                        <label>Tenant ID</label>
+                        <input type="text" name="tenant_id" value="{{ settings.tenant_id }}" placeholder="00000000-0000-0000-0000-000000000000">
+                    </div>
+                    <div class="field outlook-only">
+                        <label>Client ID</label>
+                        <input type="text" name="client_id" value="{{ settings.client_id }}" placeholder="App registration client ID">
+                    </div>
+                    <div class="field full outlook-only">
+                        <label>Client Secret</label>
+                        <input type="password" name="client_secret" value="{{ settings.client_secret }}" placeholder="Leave blank to keep existing">
+                    </div>
+
+                    <div class="field full gmail-only">
+                        <label>Gmail App Password</label>
+                        <input type="password" name="app_password" value="{{ settings.app_password }}" placeholder="16-character app password">
+                    </div>
+
+                    <div class="field">
+                        <label>Poll interval (seconds)</label>
+                        <input type="number" name="poll_interval_seconds" min="15" value="{{ settings.poll_interval_seconds }}">
+                    </div>
+                </div>
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+                    <span id="saveStatus" style="margin-left:12px; font-size:13px;"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="auto-card">
+            <h2>How it works</h2>
+            <ol style="font-size:14px; line-height:1.7;">
+                <li>Scheduler polls the mailbox inbox every <strong>poll interval</strong> seconds.</li>
+                <li>For each unread message with PDF / DOCX / XLSX / PNG / JPG attachments, files are saved to a new case folder.</li>
+                <li>Filenames are classified into <em>Bill of Lading / Commercial Invoice / Packing List / iAuditor Report</em> slots.</li>
+                <li>The same extraction + report generator used for manual uploads runs against the case.</li>
+                <li>The generated <strong>.docx</strong> report is emailed back to the sender, and the source message is marked as read.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function onProviderChange() {
+            document.getElementById('providerFields')
+                .setAttribute('data-provider', document.getElementById('providerSelect').value);
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const form = document.getElementById('settingsForm');
+            const fd = new FormData(form);
+            const body = {};
+            fd.forEach((v, k) => { body[k] = v; });
+            const status = document.getElementById('saveStatus');
+            status.textContent = 'Saving…';
+            try {
+                const r = await fetch('/email/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(body),
+                });
+                const j = await r.json();
+                status.textContent = r.ok ? '✓ Saved' : ('⚠ ' + (j.error || r.status));
+            } catch (err) {
+                status.textContent = '⚠ ' + err.message;
+            }
+        }
+
+        async function startScheduler() {
+            await fetch('/email/scheduler/start', { method: 'POST', credentials: 'same-origin' });
+            refreshStatus();
+        }
+        async function stopScheduler() {
+            await fetch('/email/scheduler/stop', { method: 'POST', credentials: 'same-origin' });
+            refreshStatus();
+        }
+        async function refreshStatus() {
+            try {
+                const r = await fetch('/email/scheduler/status', { credentials: 'same-origin' });
+                if (!r.ok) return;
+                const s = await r.json();
+                const pill = document.getElementById('statusPill');
+                pill.className = 'status-pill pill-' + (s.last_status || 'idle');
+                pill.textContent = s.last_status || 'idle';
+                document.getElementById('lastRun').textContent = s.last_run_at || '—';
+                document.getElementById('processedCount').textContent = s.processed_count;
+                document.getElementById('lastError').textContent = s.last_error || '—';
+            } catch (e) { /* ignore */ }
+        }
+
+        setInterval(refreshStatus, 5000);
+    </script>
+</body>
+</html>
