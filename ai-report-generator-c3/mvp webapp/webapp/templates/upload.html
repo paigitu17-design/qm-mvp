@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Documents - Container Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="{{ url_for('static', filename='images/quest-marine-logo.png') }}" alt="Quest Marine LLC" class="nav-logo">
+                <h2>Container Inspection System</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="{{ url_for('upload') }}" class="nav-link active">Upload</a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                <span class="nav-user">👤 {{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1>Upload Case Documents</h1>
+            <p>Upload shipping documents and create a new inspection case</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+            <!-- Document Upload Section -->
+            <div class="form-section">
+                <h2>Upload Documents</h2>
+                <p class="section-note">Upload the following documents (PDF, Word documents, or Images accepted)</p>
+
+                <div class="upload-grid">
+                    <!-- Document 1: Bill of Lading -->
+                    <div class="upload-item">
+                        <div class="upload-icon">📄</div>
+                        <label for="bill_of_lading" class="upload-label">
+                            <strong>Bill of Lading</strong>
+                            <span class="file-hint">Click to upload or drag & drop</span>
+                        </label>
+                        <input type="file" id="bill_of_lading" name="bill_of_lading"
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                               onchange="updateFileName(this)">
+                        <span class="file-name" id="file-name-bill_of_lading">No file chosen</span>
+                    </div>
+
+                    <!-- Document 2: Commercial Invoice -->
+                    <div class="upload-item">
+                        <div class="upload-icon">💰</div>
+                        <label for="commercial_invoice" class="upload-label">
+                            <strong>Commercial Invoice</strong>
+                            <span class="file-hint">Click to upload or drag & drop</span>
+                        </label>
+                        <input type="file" id="commercial_invoice" name="commercial_invoice"
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                               onchange="updateFileName(this)">
+                        <span class="file-name" id="file-name-commercial_invoice">No file chosen</span>
+                    </div>
+
+                    <!-- Document 3: Packing List -->
+                    <div class="upload-item">
+                        <div class="upload-icon">📋</div>
+                        <label for="packing_list" class="upload-label">
+                            <strong>Packing List</strong>
+                            <span class="file-hint">Click to upload or drag & drop</span>
+                        </label>
+                        <input type="file" id="packing_list" name="packing_list"
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                               onchange="updateFileName(this)">
+                        <span class="file-name" id="file-name-packing_list">No file chosen</span>
+                    </div>
+
+                    <!-- Document 4: iAuditor/Safety Culture Report -->
+                    <div class="upload-item">
+                        <div class="upload-icon">🔍</div>
+                        <label for="iauditor_report" class="upload-label">
+                            <strong>iAuditor / Safety Culture Inspection Reports</strong>
+                            <span class="file-hint">Click to upload or drag & drop</span>
+                        </label>
+                        <input type="file" id="iauditor_report" name="iauditor_report"
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                               onchange="updateFileName(this)">
+                        <span class="file-name" id="file-name-iauditor_report">No file chosen</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <button type="button" id="fetchEmailBtn" class="btn btn-secondary"
+                            onclick="fetchFromEmail()">
+                        📧 Fetch Documents from Microsoft 365 Email
+                    </button>
+                    <span id="emailFetchStatus" style="margin-left: 12px;"></span>
+                </div>
+            </div>
+
+            <script>
+            async function fetchFromEmail() {
+                const btn = document.getElementById('fetchEmailBtn');
+                const status = document.getElementById('emailFetchStatus');
+                btn.disabled = true;
+                status.textContent = 'Checking Microsoft 365 inbox…';
+                try {
+                    const resp = await fetch('/email/fetch-latest-document', {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) {
+                        status.textContent = '⚠ ' + (data.error || ('HTTP ' + resp.status));
+                        return;
+                    }
+                    // Download the saved file and inject into the matching input
+                    const fileResp = await fetch(data.download_url, { credentials: 'same-origin' });
+                    const blob = await fileResp.blob();
+                    const file = new File([blob], data.file_name, { type: data.content_type });
+
+                    const ext = data.file_name.split('.').pop().toLowerCase();
+                    const targetId = (ext === 'pdf' || ext === 'docx' || ext === 'doc')
+                        ? 'iauditor_report'
+                        : 'iauditor_report';
+                    const input = document.getElementById(targetId);
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    document.getElementById('file-name-' + targetId).textContent = data.file_name;
+
+                    status.textContent = '✓ Imported "' + data.file_name + '" from ' + data.sender;
+                } catch (err) {
+                    status.textContent = '⚠ ' + err.message;
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+            </script>
+
+            <!-- Extract Data Section -->
+            <div class="extract-section">
+                <div class="extract-info">
+                    <p>💡 <strong>Next Step:</strong> Click "Extract Data" to automatically extract case information from your uploaded documents</p>
+                </div>
+                <button type="button" id="extractBtn" class="btn btn-secondary btn-large" onclick="extractData()">
+                    🤖 Extract Case Information
+                </button>
+                <div id="extractLoading" class="loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing documents and extracting information... Please wait</p>
+                </div>
+            </div>
+
+            <!-- Extracted Case Information (Hidden Initially) -->
+            <div id="extractedDataSection" class="form-section extracted-data-section" style="display: none;">
+                <h2>📋 Extracted Case Information</h2>
+                <p class="section-note success-note">✓ Data successfully extracted from your documents. Please review and edit if needed.</p>
+
+                <!-- Hidden fields for form submission - basic -->
+                <input type="hidden" id="case_reference" name="case_reference">
+                <input type="hidden" id="container_number" name="container_number">
+                <input type="hidden" id="bl_number" name="bl_number">
+                <input type="hidden" id="goods_description" name="goods_description">
+                <input type="hidden" id="shipper" name="shipper">
+                <input type="hidden" id="consignee" name="consignee">
+                <!-- Hidden fields - all extracted data from iAuditor and other docs -->
+                <input type="hidden" id="principal_reference" name="principal_reference">
+                <input type="hidden" id="surveyor_in_charge" name="surveyor_in_charge">
+                <input type="hidden" id="attending_surveyor" name="attending_surveyor">
+                <input type="hidden" id="survey_date" name="survey_date">
+                <input type="hidden" id="survey_location" name="survey_location">
+                <input type="hidden" id="other_parties" name="other_parties">
+                <input type="hidden" id="container_type" name="container_type">
+                <input type="hidden" id="number_of_containers" name="number_of_containers">
+                <input type="hidden" id="bl_issue_place" name="bl_issue_place">
+                <input type="hidden" id="bl_issue_date" name="bl_issue_date">
+                <input type="hidden" id="carrier_name" name="carrier_name">
+                <input type="hidden" id="vessel_name" name="vessel_name">
+                <input type="hidden" id="voyage_number" name="voyage_number">
+                <input type="hidden" id="origin_port" name="origin_port">
+                <input type="hidden" id="origin_country" name="origin_country">
+                <input type="hidden" id="discharge_port" name="discharge_port">
+                <input type="hidden" id="destination_country" name="destination_country">
+                <input type="hidden" id="transhipment_port" name="transhipment_port">
+                <input type="hidden" id="arrival_date" name="arrival_date">
+                <input type="hidden" id="delivery_date" name="delivery_date">
+                <input type="hidden" id="delivery_location" name="delivery_location">
+                <input type="hidden" id="gate_out_date" name="gate_out_date">
+                <input type="hidden" id="container_return_date" name="container_return_date">
+                <input type="hidden" id="vessel_loading_date" name="vessel_loading_date">
+                <input type="hidden" id="shipment_terms" name="shipment_terms">
+                <input type="hidden" id="incoterms" name="incoterms">
+                <input type="hidden" id="has_transhipment" name="has_transhipment">
+                <input type="hidden" id="number_of_packages" name="number_of_packages">
+                <input type="hidden" id="gross_weight" name="gross_weight">
+                <input type="hidden" id="net_weight" name="net_weight">
+                <input type="hidden" id="container_condition_description" name="container_condition_description">
+                <input type="hidden" id="container_exterior_condition" name="container_exterior_condition">
+                <input type="hidden" id="container_interior_condition" name="container_interior_condition">
+                <input type="hidden" id="container_damages_found" name="container_damages_found">
+                <input type="hidden" id="packaging_description" name="packaging_description">
+                <input type="hidden" id="cargo_condition_description" name="cargo_condition_description">
+                <input type="hidden" id="quantities_offloaded" name="quantities_offloaded">
+                <input type="hidden" id="quantities_inspected" name="quantities_inspected">
+                <input type="hidden" id="damage_details" name="damage_details">
+                <input type="hidden" id="silver_nitrate_test" name="silver_nitrate_test">
+                <input type="hidden" id="light_test" name="light_test">
+                <input type="hidden" id="other_tests" name="other_tests">
+                <input type="hidden" id="cause_of_loss" name="cause_of_loss">
+                <input type="hidden" id="cause_explanation" name="cause_explanation">
+                <input type="hidden" id="discussions" name="discussions">
+                <input type="hidden" id="damage_discovery" name="damage_discovery">
+                <input type="hidden" id="invoice_number" name="invoice_number">
+                <input type="hidden" id="invoice_date" name="invoice_date">
+                <input type="hidden" id="claim_currency" name="claim_currency">
+                <input type="hidden" id="claim_amount" name="claim_amount">
+                <input type="hidden" id="notice_of_loss_date" name="notice_of_loss_date">
+                <input type="hidden" id="consignee_contact" name="consignee_contact">
+                <input type="hidden" id="survey_discussion" name="survey_discussion">
+                <input type="hidden" id="delivery_type" name="delivery_type">
+                <input type="hidden" id="collection_date" name="collection_date">
+                <input type="hidden" id="transit_routing" name="transit_routing">
+
+                <div class="data-display-grid">
+                    <div class="data-item">
+                        <label>Case Reference:</label>
+                        <div class="data-value" id="display_case_reference">-</div>
+                        <button type="button" class="btn-edit" onclick="editField('case_reference')">✎ Edit</button>
+                    </div>
+
+                    <div class="data-item">
+                        <label>Container Number:</label>
+                        <div class="data-value" id="display_container_number">-</div>
+                        <button type="button" class="btn-edit" onclick="editField('container_number')">✎ Edit</button>
+                    </div>
+
+                    <div class="data-item">
+                        <label>Bill of Lading Number:</label>
+                        <div class="data-value" id="display_bl_number">-</div>
+                        <button type="button" class="btn-edit" onclick="editField('bl_number')">✎ Edit</button>
+                    </div>
+
+                    <div class="data-item">
+                        <label>Goods Description:</label>
+                        <div class="data-value" id="display_goods_description">-</div>
+                        <button type="button" class="btn-edit" onclick="editField('goods_description')">✎ Edit</button>
+                    </div>
+
+                    <div class="data-item">
+                        <label>Shipper:</label>
+                        <div class="data-value" id="display_shipper">-</div>
+                        <button type="button" class="btn-edit" onclick="editField('shipper')">✎ Edit</button>
+                    </div>
+
+                    <div class="data-item">
+                        <label>Consignee:</label>
+                        <div class="data-value" id="display_consignee">-</div>
+                        <button type="button" class="btn-edit" onclick="editField('consignee')">✎ Edit</button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large">
+                        Next: Upload Inspection Images &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message Section -->
+            <div id="extractErrorSection" class="extract-error-section" style="display: none;">
+                <div class="alert alert-error" id="extractErrorMessage"></div>
+                <p class="section-note">You can manually enter case information below:</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="manual_case_reference">Case Reference *</label>
+                        <input type="text" id="manual_case_reference"
+                               placeholder="e.g., ISA-2024-CHN-0847"
+                               oninput="document.getElementById('case_reference').value=this.value">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="manual_container_number">Container Number *</label>
+                        <input type="text" id="manual_container_number"
+                               placeholder="e.g., TCLU4567890"
+                               oninput="document.getElementById('container_number').value=this.value">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="manual_bl_number">Bill of Lading Number *</label>
+                        <input type="text" id="manual_bl_number"
+                               placeholder="e.g., MEDUAB240208974"
+                               oninput="document.getElementById('bl_number').value=this.value">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="manual_goods_description">Goods Description *</label>
+                        <input type="text" id="manual_goods_description"
+                               placeholder="e.g., Consumer Electronics"
+                               oninput="document.getElementById('goods_description').value=this.value">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="manual_shipper">Shipper Name *</label>
+                        <input type="text" id="manual_shipper"
+                               placeholder="e.g., ABC Trading Co., Ltd"
+                               oninput="document.getElementById('shipper').value=this.value">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="manual_consignee">Consignee Name *</label>
+                        <input type="text" id="manual_consignee"
+                               placeholder="e.g., XYZ Distribution (Pty) Ltd"
+                               oninput="document.getElementById('consignee').value=this.value">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large">
+                        Next: Upload Inspection Images &rarr;
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileNameSpan = document.getElementById('file-name-' + input.id);
+            if (input.files && input.files.length > 0) {
+                fileNameSpan.textContent = input.files[0].name;
+                fileNameSpan.style.color = '#28a745';
+            } else {
+                fileNameSpan.textContent = 'No file chosen';
+                fileNameSpan.style.color = '#666';
+            }
+        }
+
+        function extractData() {
+            const extractBtn = document.getElementById('extractBtn');
+            const extractLoading = document.getElementById('extractLoading');
+            const extractedDataSection = document.getElementById('extractedDataSection');
+            const extractErrorSection = document.getElementById('extractErrorSection');
+
+            // Check if any files are uploaded
+            const billOfLading = document.getElementById('bill_of_lading').files[0];
+            const commercialInvoice = document.getElementById('commercial_invoice').files[0];
+            const packingList = document.getElementById('packing_list').files[0];
+            const iauditorReport = document.getElementById('iauditor_report').files[0];
+
+            if (!billOfLading && !commercialInvoice && !packingList && !iauditorReport) {
+                alert('Please upload at least one document before extracting data.');
+                return;
+            }
+
+            // Create form data
+            const formData = new FormData();
+            if (billOfLading) formData.append('bill_of_lading', billOfLading);
+            if (commercialInvoice) formData.append('commercial_invoice', commercialInvoice);
+            if (packingList) formData.append('packing_list', packingList);
+            if (iauditorReport) formData.append('iauditor_report', iauditorReport);
+
+            // Show loading, hide previous results
+            extractBtn.disabled = true;
+            extractBtn.textContent = 'Extracting...';
+            extractLoading.style.display = 'block';
+            extractedDataSection.style.display = 'none';
+            extractErrorSection.style.display = 'none';
+
+            // Call API
+            fetch('/api/extract-data', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                extractLoading.style.display = 'none';
+
+                if (data.extracted) {
+                    // Populate display fields
+                    const displayFields = ['case_reference', 'container_number', 'bl_number', 'goods_description', 'shipper', 'consignee'];
+
+                    displayFields.forEach(field => {
+                        let value = data[field] || 'N/A';
+                        if (field === 'case_reference') {
+                            value = value.replace(/\//g, '-');
+                        }
+                        document.getElementById(field).value = value;
+                        document.getElementById('display_' + field).textContent = value;
+                    });
+
+                    // Populate ALL hidden fields from extraction
+                    const allFields = [
+                        'principal_reference', 'surveyor_in_charge', 'attending_surveyor',
+                        'survey_date', 'survey_location', 'other_parties',
+                        'container_type', 'number_of_containers', 'bl_issue_place', 'bl_issue_date',
+                        'carrier_name', 'vessel_name', 'voyage_number',
+                        'origin_port', 'origin_country', 'discharge_port', 'destination_country',
+                        'transhipment_port', 'arrival_date', 'delivery_date', 'delivery_location',
+                        'gate_out_date', 'container_return_date', 'vessel_loading_date',
+                        'shipment_terms', 'incoterms', 'has_transhipment',
+                        'number_of_packages', 'gross_weight', 'net_weight',
+                        'container_condition_description', 'container_exterior_condition',
+                        'container_interior_condition', 'container_damages_found',
+                        'packaging_description', 'cargo_condition_description',
+                        'quantities_offloaded', 'quantities_inspected', 'damage_details',
+                        'silver_nitrate_test', 'light_test', 'other_tests',
+                        'cause_of_loss', 'cause_explanation', 'discussions', 'damage_discovery',
+                        'invoice_number', 'invoice_date', 'claim_currency', 'claim_amount',
+                        'notice_of_loss_date', 'consignee_contact', 'survey_discussion',
+                        'delivery_type', 'collection_date', 'transit_routing'
+                    ];
+
+                    allFields.forEach(field => {
+                        const el = document.getElementById(field);
+                        if (el && data[field] !== undefined && data[field] !== null) {
+                            el.value = String(data[field]);
+                        }
+                    });
+
+                    // Show extracted data section
+                    extractedDataSection.style.display = 'block';
+
+                    // Scroll to extracted data
+                    extractedDataSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    // Show error and manual entry form
+                    document.getElementById('extractErrorMessage').textContent = data.error || 'Failed to extract data from documents';
+                    extractErrorSection.style.display = 'block';
+
+                    // Scroll to error section
+                    extractErrorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                extractBtn.disabled = false;
+                extractBtn.textContent = '🤖 Extract Case Information';
+            })
+            .catch(error => {
+                extractLoading.style.display = 'none';
+                document.getElementById('extractErrorMessage').textContent = `Error: ${error.message}`;
+                extractErrorSection.style.display = 'block';
+                extractBtn.disabled = false;
+                extractBtn.textContent = '🤖 Extract Case Information';
+            });
+        }
+
+        function editField(fieldName) {
+            const currentValue = document.getElementById(fieldName).value;
+            const newValue = prompt(`Edit ${fieldName.replace(/_/g, ' ')}:`, currentValue);
+
+            if (newValue !== null && newValue.trim() !== '') {
+                document.getElementById(fieldName).value = newValue;
+                document.getElementById('display_' + fieldName).textContent = newValue;
+            }
+        }
+    </script>
+</body>
+</html>
