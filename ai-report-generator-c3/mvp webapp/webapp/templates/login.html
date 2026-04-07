@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Container Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/quest-marine-logo.png') }}" alt="Quest Marine LLC" class="company-logo">
+                <h1>Container Inspection</h1>
+                <p>Report Management System</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autofocus
+                           placeholder="Enter your username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required
+                           placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Login
+                </button>
+            </form>
+
+            <div class="contact-admin">
+                <a href="{{ url_for('contact_admin') }}">Contact Admin</a>
+            </div>
+
+            <div class="demo-credentials">
+                <small>Demo credentials: admin / admin123</small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Images - Container Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="{{ url_for('static', filename='images/quest-marine-logo.png') }}" alt="Quest Marine LLC" class="nav-logo">
+                <h2>Container Inspection System</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                <span class="nav-user">{{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1>Upload Inspection Images</h1>
+            <p>Case: <strong>{{ case.case_reference }}</strong> | Container: <strong>{{ case.container_number }}</strong></p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div id="alert-container"></div>
+
+        <!-- Already Uploaded Images -->
+        {% if case.images %}
+        <div class="case-summary" style="margin-bottom: 24px;">
+            <h2>Uploaded Images ({{ case.images|length }})</h2>
+            <div class="image-gallery">
+                {% for img in case.images %}
+                <div class="image-card">
+                    <div class="image-preview">
+                        <img src="{{ url_for('serve_case_image', case_ref=case.id or case.case_reference, filename=img.filename) }}" alt="{{ img.category }}">
+                    </div>
+                    <div class="image-info">
+                        <span class="badge {% if img.category == 'cargo' %}badge-warning{% elif img.category == 'container' %}badge-success{% else %}badge-info{% endif %}">
+                            {{ img.category|upper }}
+                        </span>
+                        <p class="image-filename">{{ img.original_name }}</p>
+                        {% if img.ai_description %}
+                        <details class="image-description">
+                            <summary>AI Analysis</summary>
+                            <p>{{ img.ai_description }}</p>
+                        </details>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Upload New Images -->
+        <div class="upload-form">
+            <div class="form-section">
+                <h2>Add New Images</h2>
+                <p class="section-note">Select a category and image for each photo. Click "Upload & Analyze" when ready. All images are uploaded together.</p>
+
+                <div id="image-entries">
+                    <!-- Entry 1 -->
+                    <div class="image-upload-entry" data-index="1">
+                        <div class="image-entry-header">
+                            <strong>Image 1</strong>
+                        </div>
+                        <div class="image-entry-row">
+                            <div class="form-group" style="flex: 0 0 200px;">
+                                <label>Category</label>
+                                <select class="form-select image-category">
+                                    <option value="">-- Select --</option>
+                                    <option value="cargo">Cargo / Goods</option>
+                                    <option value="container">Container</option>
+                                    <option value="vessel">Vessel</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Image File</label>
+                                <input type="file" accept=".jpg,.jpeg,.png" class="form-file-input image-file" onchange="previewImage(this)">
+                            </div>
+                            <div class="image-thumb-preview" style="display:none;">
+                                <img src="" alt="Preview">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <button type="button" class="btn btn-secondary" onclick="addImageEntry()">
+                        + Add Another Image
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="uploadBtn" class="btn btn-success btn-large" onclick="uploadImages()">
+                    Upload & Analyze Images
+                </button>
+
+                <div id="uploadLoading" class="loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Uploading and analyzing images with AI... This may take a moment.</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="{{ url_for('generate_report_page', case_id=case.id or case.case_reference) }}" class="btn btn-primary btn-large">
+                    Proceed to Generate Report
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let entryCount = 1;
+
+        function addImageEntry() {
+            entryCount++;
+            const container = document.getElementById('image-entries');
+            const entry = document.createElement('div');
+            entry.className = 'image-upload-entry';
+            entry.setAttribute('data-index', entryCount);
+            entry.innerHTML = `
+                <div class="image-entry-header">
+                    <strong>Image ${entryCount}</strong>
+                    <button type="button" class="btn-remove-entry" onclick="removeEntry(this)">&times; Remove</button>
+                </div>
+                <div class="image-entry-row">
+                    <div class="form-group" style="flex: 0 0 200px;">
+                        <label>Category</label>
+                        <select class="form-select image-category">
+                            <option value="">-- Select --</option>
+                            <option value="cargo">Cargo / Goods</option>
+                            <option value="container">Container</option>
+                            <option value="vessel">Vessel</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Image File</label>
+                        <input type="file" accept=".jpg,.jpeg,.png" class="form-file-input image-file" onchange="previewImage(this)">
+                    </div>
+                    <div class="image-thumb-preview" style="display:none;">
+                        <img src="" alt="Preview">
+                    </div>
+                </div>
+            `;
+            container.appendChild(entry);
+        }
+
+        function removeEntry(btn) {
+            btn.closest('.image-upload-entry').remove();
+        }
+
+        function previewImage(input) {
+            const previewDiv = input.closest('.image-entry-row').querySelector('.image-thumb-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewDiv.querySelector('img').src = e.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function uploadImages() {
+            const entries = document.querySelectorAll('.image-upload-entry');
+            const formData = new FormData();
+            let validCount = 0;
+
+            entries.forEach((entry) => {
+                const category = entry.querySelector('.image-category').value;
+                const fileInput = entry.querySelector('.image-file');
+
+                if (category && fileInput.files.length > 0) {
+                    formData.append('images', fileInput.files[0]);
+                    formData.append('categories', category);
+                    validCount++;
+                }
+            });
+
+            if (validCount === 0) {
+                alert('Please select at least one image with a category.');
+                return;
+            }
+
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadLoading = document.getElementById('uploadLoading');
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = `Uploading ${validCount} image(s)...`;
+            uploadLoading.style.display = 'block';
+
+            const caseId = '{{ case.id or case.case_reference }}';
+
+            fetch('/api/upload-images/' + caseId, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => { throw new Error(data.error || 'Upload failed'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                uploadLoading.style.display = 'none';
+                if (data.success) {
+                    document.getElementById('alert-container').innerHTML =
+                        '<div class="alert alert-success">' + data.message + '</div>';
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    document.getElementById('alert-container').innerHTML =
+                        '<div class="alert alert-error">Error: ' + (data.error || 'Upload failed') + '</div>';
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload & Analyze Images';
+                }
+            })
+            .catch(error => {
+                uploadLoading.style.display = 'none';
+                document.getElementById('alert-container').innerHTML =
+                    '<div class="alert alert-error">Error: ' + error.message + '</div>';
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload & Analyze Images';
+            });
+        }
+    </script>
+</body>
+</html>

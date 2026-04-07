@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Container Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="{{ url_for('static', filename='images/quest-marine-logo.png') }}" alt="Quest Marine LLC" class="nav-logo">
+                <h2>Container Inspection System</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
+                <span class="nav-user">👤 {{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+            <p>Overview of all inspection cases and reports</p>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3>Total Cases</h3>
+                    <p class="stat-number">{{ stats.total }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-content">
+                    <h3>Pending</h3>
+                    <p class="stat-number">{{ stats.pending }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3>Completed</h3>
+                    <p class="stat-number">{{ stats.completed }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>All Cases</h2>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                    ➕ New Case
+                </a>
+            </div>
+
+            {% if cases %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Case Reference</th>
+                            <th>Container No.</th>
+                            <th>B/L No.</th>
+                            <th>Goods</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for case in cases %}
+                        <tr>
+                            <td><strong>{{ case.case_reference }}</strong></td>
+                            <td>{{ case.container_number }}</td>
+                            <td>{{ case.bl_number }}</td>
+                            <td>{{ case.goods_description }}</td>
+                            <td>
+                                {% if case.status == 'completed' %}
+                                <span class="badge badge-success">✓ Completed</span>
+                                {% else %}
+                                <span class="badge badge-warning">⏳ Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ case.created_by }}</td>
+                            <td>{{ case.created_at[:10] }}</td>
+                            <td>
+                                {% if case.status == 'completed' %}
+                                <a href="{{ url_for('download_report', filename=case.report_file) }}"
+                                   class="btn btn-sm btn-primary">
+                                    Download
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('images_page', case_id=case.id or case.case_reference) }}"
+                                   class="btn btn-sm btn-secondary">
+                                    Images
+                                </a>
+                                <a href="{{ url_for('generate_report_page', case_id=case.id or case.case_reference) }}"
+                                   class="btn btn-sm btn-success">
+                                    Generate
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No Cases Yet</h3>
+                <p>Get started by uploading your first case documents</p>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                    Upload Documents
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- NOTE: Replace this section with your custom dashboard layout -->
+        <div class="custom-dashboard-section">
+            <h2>📊 Advanced Analytics</h2>
+            <p class="section-note">
+                <em>This section is ready for your custom dashboard layout code.</em>
+                <br>Replace the content in dashboard.html (custom-dashboard-section) with your preferred layout.
+            </p>
+
+            <!-- Placeholder for custom charts/analytics -->
+            <div class="placeholder-charts">
+                <div class="chart-placeholder">
+                    <h4>Case Volume by Month</h4>
+                    <p>Chart placeholder - Add your visualization here</p>
+                </div>
+                <div class="chart-placeholder">
+                    <h4>Report Status Distribution</h4>
+                    <p>Chart placeholder - Add your visualization here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
