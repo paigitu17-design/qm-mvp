@@ -103,10 +103,12 @@
                         <input type="number" name="poll_interval_seconds" min="15" value="{{ settings.poll_interval_seconds }}">
                     </div>
                 </div>
-                <div style="margin-top:16px;">
+                <div style="margin-top:16px;" class="row-actions">
                     <button type="submit" class="btn btn-primary">💾 Save Settings</button>
-                    <span id="saveStatus" style="margin-left:12px; font-size:13px;"></span>
+                    <button type="button" class="btn btn-secondary" onclick="testConnection()">🔌 Test Connection</button>
+                    <span id="saveStatus" style="font-size:13px;"></span>
                 </div>
+                <div id="testResult" style="margin-top:12px; padding:10px; border-radius:4px; display:none; font-size:13px;"></div>
             </form>
         </div>
 
@@ -147,6 +149,39 @@
                 status.textContent = r.ok ? '✓ Saved' : ('⚠ ' + (j.error || r.status));
             } catch (err) {
                 status.textContent = '⚠ ' + err.message;
+            }
+        }
+
+        async function testConnection() {
+            const fd = new FormData(document.getElementById('settingsForm'));
+            const body = {};
+            fd.forEach((v, k) => { body[k] = v; });
+            const box = document.getElementById('testResult');
+            box.style.display = 'block';
+            box.style.background = '#eef';
+            box.style.color = '#114';
+            box.textContent = 'Testing connection…';
+            try {
+                const r = await fetch('/email/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(body),
+                });
+                const j = await r.json();
+                if (j.success) {
+                    box.style.background = '#d4edda';
+                    box.style.color = '#155724';
+                    box.textContent = '✅ Integration successful — ' + j.message;
+                } else {
+                    box.style.background = '#f8d7da';
+                    box.style.color = '#721c24';
+                    box.textContent = '❌ Integration not successful — ' + (j.message || 'Unknown error');
+                }
+            } catch (err) {
+                box.style.background = '#f8d7da';
+                box.style.color = '#721c24';
+                box.textContent = '❌ Integration not successful — ' + err.message;
             }
         }
 

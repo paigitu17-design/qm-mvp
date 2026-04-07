@@ -1187,6 +1187,62 @@ def email_save_settings_route():
     return jsonify({'success': True, 'settings': masked})
 
 
+@app.route('/email/test-connection', methods=['POST'])
+def email_test_connection():
+    if 'username' not in session:
+        return jsonify({'error': 'unauthorized'}), 401
+    from email_service import build_provider, EmailProviderError
+    body = request.get_json(silent=True) or {}
+    settings = load_email_settings()
+    # Merge any in-form values without persisting; ignore blank secrets
+    for k in ('provider', 'mailbox', 'tenant_id', 'client_id',
+              'client_secret', 'app_password'):
+        v = body.get(k)
+        if v not in (None, '') and v not in ('••••••••',):
+            settings[k] = v
+    try:
+        provider = build_provider(settings)
+        if settings.get('provider') == 'outlook':
+            # Force a token acquisition + a lightweight inbox query
+            provider._token()
+            import requests as _rq
+            r = _rq.get(
+                f"https://graph.microsoft.com/v1.0/users/{settings['mailbox']}/mailFolders/Inbox"
+                "?$select=id,displayName,totalItemCount",
+                headers=provider._headers(), timeout=20,
+            )
+            if r.status_code != 200:
+                return jsonify({'success': False,
+                                'message': f'Graph error {r.status_code}: {r.text}'}), 200
+            data = r.json()
+            return jsonify({
+                'success': True,
+                'message': (
+                    f"Connected to {settings['mailbox']}. "
+                    f"Inbox '{data.get('displayName','Inbox')}' has "
+                    f"{data.get('totalItemCount','?')} total items."
+                ),
+            })
+        else:
+            # Gmail: open IMAP and SMTP, log in, log out
+            m = provider._imap()
+            m.select('INBOX')
+            try: m.logout()
+            except Exception: pass
+            import smtplib, ssl
+            with smtplib.SMTP_SSL(provider.SMTP_HOST, provider.SMTP_PORT,
+                                  context=ssl.create_default_context()) as s:
+                s.login(provider.address, provider.password)
+            return jsonify({
+                'success': True,
+                'message': f"Connected to Gmail account {provider.address} (IMAP + SMTP OK).",
+            })
+    except EmailProviderError as e:
+        return jsonify({'success': False, 'message': str(e)}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'{type(e).__name__}: {e}'}), 200
+
+
 @app.route('/email/scheduler/start', methods=['POST'])
 def email_scheduler_start():
     if 'username' not in session:
