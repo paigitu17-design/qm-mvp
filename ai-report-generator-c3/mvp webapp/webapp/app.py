@@ -276,25 +276,44 @@ def generate_full_report(case_data):
 
     doc.add_paragraph()
 
-    # Reference line - Calibri 13, black
-    ref = doc.add_paragraph()
+    # Reference line - Calibri 13, black, single line via 3-col borderless table
     ref_font_size = Pt(13)
     ref_black = RGBColor(0x00, 0x00, 0x00)
 
-    def _ref_run(text, bold=False):
-        r = ref.add_run(text)
-        r.bold = bold
-        r.font.name = 'Calibri'
-        r.font.size = ref_font_size
-        r.font.color.rgb = ref_black
-        return r
+    ref_table = doc.add_table(rows=1, cols=3)
+    ref_table.autofit = True
+    ref_table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    ref_cells = ref_table.rows[0].cells
 
-    _ref_run("OUR REF: ", bold=True)
-    _ref_run(f"{case_ref}")
-    _ref_run("\tYOUR REF: ", bold=True)
-    _ref_run(case_data.get('principal_reference', '#PRINCIPAL REF'))
-    _ref_run("\tDATE: ", bold=True)
-    _ref_run(f"{report_date}")
+    def _fill_ref_cell(cell, label, value):
+        cell.paragraphs[0].paragraph_format.space_after = Pt(0)
+        run_lbl = cell.paragraphs[0].add_run(label)
+        run_lbl.bold = True
+        run_lbl.font.name = 'Calibri'
+        run_lbl.font.size = ref_font_size
+        run_lbl.font.color.rgb = ref_black
+        run_val = cell.paragraphs[0].add_run(value)
+        run_val.font.name = 'Calibri'
+        run_val.font.size = ref_font_size
+        run_val.font.color.rgb = ref_black
+
+    _fill_ref_cell(ref_cells[0], "OUR REF: ", f"{case_ref}")
+    _fill_ref_cell(ref_cells[1], "YOUR REF: ", case_data.get('principal_reference', '#PRINCIPAL REF'))
+    _fill_ref_cell(ref_cells[2], "DATE: ", f"{report_date}")
+
+    # Strip table borders so it looks like a plain line
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    tbl_pr = ref_table._element.find(qn('w:tblPr'))
+    if tbl_pr is None:
+        tbl_pr = OxmlElement('w:tblPr')
+        ref_table._element.insert(0, tbl_pr)
+    borders = OxmlElement('w:tblBorders')
+    for edge in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
+        b = OxmlElement(f'w:{edge}')
+        b.set(qn('w:val'), 'nil')
+        borders.append(b)
+    tbl_pr.append(borders)
 
     doc.add_paragraph()
     doc.add_paragraph()
