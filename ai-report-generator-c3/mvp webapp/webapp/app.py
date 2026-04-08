@@ -1028,8 +1028,10 @@ def generate_full_report(case_data):
     run.font.size = Pt(8)
     run.bold = True
 
-    # Save
-    filename = f"Report_{case_ref}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    # Save — sanitize case_ref so values like "N/A" don't create subdirs
+    import re as _re
+    safe_case_ref = _re.sub(r'[^A-Za-z0-9._-]+', '_', str(case_ref or 'CASE')).strip('_') or 'CASE'
+    filename = f"Report_{safe_case_ref}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
     filepath = os.path.join(REPORTS_FOLDER, filename)
     doc.save(filepath)
 
