@@ -5,6 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Documents - Container Inspection System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background:
+                linear-gradient(rgba(10, 25, 50, 0.78), rgba(10, 25, 50, 0.85)),
+                url('https://images.unsplash.com/photo-1605281317010-fe5ffe798166?auto=format&fit=crop&w=2000&q=80') center/cover fixed no-repeat;
+            min-height: 100vh;
+        }
+        .navbar { background: rgba(10, 25, 50, 0.92); backdrop-filter: blur(8px); }
+        .nav-brand h2 { color: #fff; }
+        .nav-link { color: #cfd8e3 !important; }
+        .nav-link.active, .nav-link:hover { color: #ffd166 !important; }
+        .hero {
+            text-align: center;
+            color: #fff;
+            padding: 40px 20px 20px;
+        }
+        .hero h1 {
+            font-size: 38px;
+            margin: 0 0 10px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+        }
+        .hero h1 .accent { color: #ffd166; }
+        .hero p {
+            font-size: 16px;
+            color: #d6e0ec;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .feature-row {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin: 22px auto 0;
+            max-width: 1000px;
+        }
+        .feature-pill {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 22px;
+            font-size: 13px;
+            backdrop-filter: blur(6px);
+        }
+        .main-container {
+            background: rgba(255,255,255,0.97);
+            border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+            padding: 30px 32px;
+            max-width: 1100px;
+            margin: 24px auto 40px;
+        }
+        .page-header h1 { color: #0a1932; }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -22,6 +78,17 @@
             </div>
         </div>
     </nav>
+
+    <header class="hero">
+        <h1>AI-Powered <span class="accent">Report Management System</span></h1>
+        <p>Automated marine cargo inspection — upload your shipping documents and let AI extract, analyze and generate a professional Certificate of Survey in seconds.</p>
+        <div class="feature-row">
+            <div class="feature-pill">📄 Smart Document Extraction</div>
+            <div class="feature-pill">🖼 Vision AI for Scanned PDFs</div>
+            <div class="feature-pill">📧 Email Automation Pipeline</div>
+            <div class="feature-pill">📝 One-Click Report Generation</div>
+        </div>
+    </header>
 
     <div class="main-container">
         <div class="page-header">
@@ -273,7 +340,7 @@
                 <!-- Submit Button -->
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary btn-large">
-                        Next: Upload Inspection Images &rarr;
+                        ⚙ Process Report &rarr;
                     </button>
                 </div>
             </div>
@@ -333,7 +400,7 @@
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary btn-large">
-                        Next: Upload Inspection Images &rarr;
+                        ⚙ Process Report &rarr;
                     </button>
                 </div>
             </div>
