@@ -97,12 +97,15 @@ class GraphEmailProvider:
 
     def fetch_new_messages(self) -> List[FetchedMessage]:
         headers = self._headers()
+        # Graph rejects (isRead eq false AND hasAttachments eq true) + orderby
+        # as "InefficientFilter". Filter only on isRead and check
+        # hasAttachments client-side.
         list_url = (
             f"{GRAPH_BASE}/users/{self.mailbox}/mailFolders/Inbox/messages"
-            "?$filter=isRead eq false and hasAttachments eq true"
+            "?$filter=isRead eq false"
             "&$orderby=receivedDateTime desc"
             "&$top=25"
-            "&$select=id,subject,from,receivedDateTime"
+            "&$select=id,subject,from,receivedDateTime,hasAttachments"
         )
         resp = requests.get(list_url, headers=headers, timeout=30)
         if resp.status_code != 200:
@@ -112,6 +115,8 @@ class GraphEmailProvider:
 
         out: List[FetchedMessage] = []
         for msg in resp.json().get('value', []):
+            if not msg.get('hasAttachments'):
+                continue
             att_resp = requests.get(
                 f"{GRAPH_BASE}/users/{self.mailbox}/messages/{msg['id']}/attachments",
                 headers=headers, timeout=30,
