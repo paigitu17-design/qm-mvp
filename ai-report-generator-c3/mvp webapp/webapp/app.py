@@ -1423,8 +1423,7 @@ def upload():
         save_case_data(cases)
 
         flash(f'Case {case_reference} created successfully!', 'success')
-        # Skip the inspection-images step entirely; jump to report generation
-        return redirect(url_for('generate_report_page', case_id=case_id))
+        return redirect(url_for('images_page', case_id=case_id))
 
     return render_template('upload.html', username=session['username'])
 
