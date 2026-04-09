@@ -25,7 +25,7 @@
     <div class="main-container">
         <div class="page-header">
             <h1>Generate Inspection Report</h1>
-            <p>Review case details, images, and generate final report</p>
+            <p>Review case details and generate final report</p>
         </div>
 
         <div id="alert-container"></div>
@@ -102,47 +102,6 @@
                 </div>
                 {% endif %}
             </div>
-        </div>
-
-        <!-- Inspection Images -->
-        <div class="documents-section">
-            <div class="table-header">
-                <h2>Inspection Images ({{ case.images|length if case.images else 0 }})</h2>
-                <a href="{{ url_for('images_page', case_id=case.id or case.case_reference) }}" class="btn btn-secondary">
-                    + Add More Images
-                </a>
-            </div>
-
-            {% if case.images %}
-            <div class="image-gallery">
-                {% for img in case.images %}
-                <div class="image-card">
-                    <div class="image-preview">
-                        <img src="{{ url_for('serve_case_image', case_ref=case.id or case.case_reference, filename=img.filename) }}" alt="{{ img.category }}">
-                    </div>
-                    <div class="image-info">
-                        <span class="badge {% if img.category == 'cargo' %}badge-warning{% elif img.category == 'container' %}badge-success{% else %}badge-info{% endif %}">
-                            {{ img.category|upper }}
-                        </span>
-                        <p class="image-filename">{{ img.original_name }}</p>
-                        {% if img.ai_description %}
-                        <details class="image-description">
-                            <summary>AI Analysis</summary>
-                            <p>{{ img.ai_description }}</p>
-                        </details>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state" style="padding: 40px;">
-                <p>No inspection images uploaded yet.</p>
-                <a href="{{ url_for('images_page', case_id=case.id or case.case_reference) }}" class="btn btn-primary" style="margin-top: 12px;">
-                    Upload Inspection Images
-                </a>
-            </div>
-            {% endif %}
         </div>
 
         <!-- Generate Report Button -->
